@@ -1,0 +1,29 @@
+/* Chrome 61 baseline additions: retain the existing layout and controls. */
+html,body{min-height:100%;-webkit-tap-highlight-color:transparent}
+body{-webkit-touch-callout:none}
+button:focus,input:focus,canvas:focus{outline:2px solid #8ce7ce;outline-offset:3px}
+button:active{background:#203239}
+.stage:before{top:0;right:0;bottom:0;left:0}
+.stage-bottom{align-items:flex-end}
+.switch-row input{-webkit-appearance:none}
+.panel-scroll,.animation-gallery{-webkit-overflow-scrolling:touch}
+.workspace{grid-gap:18px;min-width:0}
+.animation-gallery{grid-gap:10px}
+.view-buttons,.zoom-controls,.segment,.actions,.view-tools,.controls,.toggles,.region-tabs,.layer-stepper,.panel,.stage-top,.switch-row{gap:0}
+.view-buttons>*+*{margin-left:5px}.zoom-controls>*+*{margin-top:5px}
+.segment>*+*{margin-left:3px}.actions>*+*{margin-left:8px}
+.view-tools>*+*{margin-top:7px}.controls>*+*{margin-top:17px}
+.toggles>*+*{margin-top:14px}.region-tabs>*+*{margin-left:16px}
+.layer-stepper>*+*{margin-left:10px}.region-heading .switch-row>*+*{margin-left:10px}
+main{height:100vh;height:var(--app-height,100vh);padding-top:29px;padding-bottom:25px}
+main{padding-top:calc(29px + var(--safe-area-inset-top,0px));padding-bottom:calc(25px + var(--safe-area-inset-bottom,0px))}
+@supports(padding-top:env(safe-area-inset-top)){main{padding-top:calc(29px + var(--safe-area-inset-top,env(safe-area-inset-top,0px)));padding-bottom:calc(25px + var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)))}}
+@media(max-width:1000px){.workspace{grid-gap:12px}}
+@media(max-width:740px){
+ main{height:auto;min-height:100vh;min-height:var(--app-height,100vh);padding:16px 12px}
+ main{padding-top:calc(16px + var(--safe-area-inset-top,0px));padding-bottom:calc(16px + var(--safe-area-inset-bottom,0px))}
+ .workspace{grid-gap:10px}.animation-gallery{gap:0}.animation-gallery>*+*{margin-left:8px}
+ .view-tools>*+*{margin-top:4px}.stage-top>.view-tools{margin-left:8px}.controls>*+*{margin-top:20px}
+ .stage{min-height:320px}.panel-scroll{min-width:0}
+ @supports(padding-top:env(safe-area-inset-top)){main{padding-top:calc(16px + var(--safe-area-inset-top,env(safe-area-inset-top,0px)));padding-bottom:calc(16px + var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)))}}
+}

@@ -8,7 +8,7 @@
     rasengan:{title:'螺旋丸',description:'蓝色光丝逐渐汇成横向旋转的球。与视频开头使用同一套光色、轨迹和外围气流，拖动可以查看内部。',spin:6,density:384,trail:3.6,view:'3d',axis:'horizontal',yaw:.5,pitch:.65,rotate:true,light:1,palette:false},
     lightning:{title:'球状闪电',description:'在同一个螺旋丸上，电流沿已有流线局部跳亮，分叉逐渐增多。这是涡旋结构的艺术演示，并非球状闪电的确定成因。',spin:6,density:384,trail:3.6,view:'3d',axis:'horizontal',yaw:.5,pitch:.65,rotate:true,light:1,palette:false}
   });
-  const heroSeeds=new Map();
+  const heroSeeds=new Map(typeof MiniToolRuntime!=='undefined'?MiniToolRuntime.heroSeeds:[]);
   function seedPoints(P,count,kind){
     if(kind==='rasengan'||kind==='lightning'){
       if(!heroSeeds.has(count)){

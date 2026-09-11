@@ -86,7 +86,7 @@ export function paintAirflowStudy(ctx:LightRenderer,camera:Camera,time:number,op
 // Short discharges live inside the moving gas packet. They fade at both ends,
 // at the body silhouette and as they enter or leave the illuminated gas.
 export function airflowElectricPaths(camera:Camera,time:number){
-  return [0,5,2,7,4].flatMap(band=>[2,4,6].map(row=>{
+  return [0,5,2,7,4].map(band=>[2,4,6].map(row=>{
     const curve=sheets[band][row];
     const head=((time/curve.duration+band*.17)%1+1)%1;
     const cycle=time*.43+band*.173+row*.219,age=cycle-Math.floor(cycle);
@@ -117,5 +117,5 @@ export function airflowElectricPaths(camera:Camera,time:number){
       return p;
     });
     return {points,masks,opacity:life};
-  }));
+  })).reduce((a,b)=>a.concat(b));
 }

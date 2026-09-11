@@ -3,14 +3,18 @@
   'use strict';
   const A=HillAnimations, P=HillPhysics, $=id=>document.getElementById(id), canvas=$('scene'),ctx=canvas.getContext('2d');
   if(!ctx){$('scene-label').textContent='画布不可用，请换用支持画布的浏览器';return;}
+  const mini=typeof MiniToolRuntime!=='undefined'?MiniToolRuntime:null;
+  let frameHandle=0,slowFrames=0;
+  function queueFrame(){frameHandle=requestAnimationFrame(frame);}
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const state={animation:null,clean:true,topic:'vortex',view:'3d',axis:'horizontal',swirl:false,spin:.8,speed:1,glow:0,rasenganLight:0,slice:.18,boundary:true,rotate:false,playing:!reduced,yaw:.45,pitch:.22,roll:Math.PI/2,zoom:1,time:0,mass:1,distance:1,moon:38.4,editing:'inside'};
-  function regionDefaults(outside=false){return {enabled:!outside,density:outside?720:1440,trail:.42,lines:true,boundary:true,trace:!outside,layers:0,focus:0,layerVisible:true,surfaces:[]};}
+  function regionDefaults(outside=false){return {enabled:!outside,density:mini?Math.min(mini.count,outside?720:1440):(outside?720:1440),trail:.42,lines:true,boundary:true,trace:!outside,layers:0,focus:0,layerVisible:true,surfaces:[]};}
   const regions={inside:regionDefaults(),outside:regionDefaults(true)};
   let w=0,h=0,dpr=1,cacheDirty=true,last=0,phase=0,accumulator=0,lastDraw=0;
   let heroRenderer=null,heroUnavailable=false;const heroCanvas=document.createElement("canvas");
   const isHero=()=>state.animation==='rasengan'||state.animation==='lightning';
   heroCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();heroUnavailable=true;$('renderer-status').hidden=false;$('renderer-status').textContent='已切换轻量光线显示，可刷新恢复光效';});
+  heroCanvas.addEventListener('webglcontextrestored',()=>{heroUnavailable=true;heroRenderer=null;});
   const base=document.createElement('canvas'),bg=base.getContext('2d'),bloom=document.createElement('canvas'),bloomCtx=bloom.getContext('2d');
   const light=document.createElement('canvas'),lightCtx=light.getContext('2d');
   let seed=7941,evolution=null,steadySnapshot=null,evolutionOutline=[],evolutionCenter=0,evolutionExtent=1.4;
@@ -50,7 +54,7 @@
     const preset=A.presets[kind];if(!preset)return;
     if(evolution)setPerturbation(null);
     Object.assign(state,{animation:kind,swirl:preset.spin>0,spin:preset.spin||.8,axis:preset.axis||'vertical',editing:'inside',time:0,presentation:0,speed:1,zoom:1,glow:0,rasenganLight:preset.light,rotate:preset.rotate,clean:true,playing:!reduced});
-    regions.inside={...regionDefaults(),density:preset.density,trail:preset.trail,boundary:false,trace:false};
+    regions.inside={...regionDefaults(),density:mini?Math.min(mini.count,preset.density):preset.density,trail:preset.trail,boundary:false,trace:false};
     regions.outside=regionDefaults(true);
     accumulator=0;last=0;
     makeParticles('inside');makeParticles('outside');
@@ -323,7 +327,7 @@
     if(isHero()&&state.clean&&state.view!=='section'&&!regions.outside.enabled&&!regions.inside.layers&&regions.inside.lines&&!heroUnavailable){
       if(!regions.inside.enabled)return;
       try{
-        if(!heroRenderer){heroCanvas.width=heroCanvas.height=Math.min(1080,Math.round(Math.min(w,h)*dpr));heroRenderer=RasenganRenderer.create(heroCanvas);}
+        if(!heroRenderer){heroCanvas.width=heroCanvas.height=Math.min(mini?mini.buffer:1080,Math.round(Math.min(w,h)*dpr));heroRenderer=RasenganRenderer.create(heroCanvas,mini?mini.renderOptions():undefined);}
         heroRenderer.draw(P,regions.inside.cloud.slice(0,regions.inside.density),state,regions.inside.trail);
         const side=Math.min(w,h);ctx.drawImage(heroCanvas,(w-side)/2,(h-side)/2,side,side);return;
       }catch(error){heroUnavailable=true;$('renderer-status').hidden=false;$('renderer-status').textContent='当前设备使用轻量光线显示';}
@@ -379,10 +383,12 @@
     ctx.fillStyle='#edc79e';ctx.textAlign='left';ctx.fillText('☀ 太阳方向',24,h*.45);ctx.font='10px sans-serif';ctx.fillStyle='#8fa1a7';ctx.fillText('远在画面之外',24,h*.45+19);
     ctx.strokeStyle='#ad895c70';ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(26,h*.45+33);ctx.lineTo(92,h*.45+33);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(26,h*.45+33);ctx.lineTo(32,h*.45+29);ctx.moveTo(26,h*.45+33);ctx.lineTo(32,h*.45+37);ctx.stroke();
   }
-  function resize(){const rect=canvas.getBoundingClientRect();w=rect.width;h=rect.height;dpr=Math.min(devicePixelRatio||1,2);for(const c of [canvas,base,bloom,light]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}for(const g of [ctx,bg,bloomCtx,lightCtx])g.setTransform(dpr,0,0,dpr,0,0);cacheDirty=true;}
+  function resize(){const rect=canvas.getBoundingClientRect();w=rect.width;h=rect.height;dpr=Math.min(devicePixelRatio||1,mini?(mini.level?1:1.5):2);if(mini)dpr=Math.min(dpr,Math.sqrt((mini.level?1000000:2000000)/Math.max(1,w*h)));if(mini&&heroRenderer){heroRenderer.dispose();heroRenderer=null;}for(const c of [canvas,base,bloom,light]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}for(const g of [ctx,bg,bloomCtx,lightCtx])g.setTransform(dpr,0,0,dpr,0,0);cacheDirty=true;}
   function frame(now){
-    if(w<740&&now-lastDraw<32){requestAnimationFrame(frame);return;}lastDraw=now;
-    if(document.hidden){last=0;requestAnimationFrame(frame);return;}
+    frameHandle=0;
+    if(document.hidden){last=0;return;}
+    if((mini||w<740)&&now-lastDraw<32){queueFrame();return;}lastDraw=now;
+    const renderStarted=mini?performance.now():0;
     const elapsed=last?Math.min(.08,Math.max(0,(now-last)/1000)):0;last=now;
     if(state.playing)state.presentation=(state.presentation||0)+elapsed*state.speed;
     const dt=state.playing?elapsed*state.speed*.42:0;
@@ -398,7 +404,21 @@
       for(const [name,r] of Object.entries(regions))if(r.enabled)drawTrace(r,name==='outside');
       drawOrientation();$('simulation-time').textContent=`模拟时间 ${state.time.toFixed(2)}${accumulator>.12?' · 计算追赶中':''}`;
     }else drawGravity();
-    requestAnimationFrame(frame);
+    if(mini){
+      const slow=performance.now()-renderStarted>45||elapsed>.07;
+      slowFrames=slow?slowFrames+1:Math.max(0,slowFrames-1);
+      if(slowFrames>=45){slowFrames=0;mini.level++;
+        if(heroRenderer){heroRenderer.dispose();heroRenderer=null;}
+        mini.count=96;mini.buffer=640;
+        for(const r of Object.values(regions)){r.density=Math.min(r.density,mini.count);if(r.cloud)r.cloud.length=Math.min(r.cloud.length,mini.count);}
+        $('density').max=String(mini.count);state.glow=0;state.rasenganLight=mini.level>1?0:state.rasenganLight;
+        if(mini.level>1)heroUnavailable=true;
+        if(mini.level>2){state.playing=false;playLabel();}
+        $('renderer-status').hidden=false;$('renderer-status').textContent=mini.level>2?'已暂停以保持操作流畅，可点击播放继续':mini.level>1?'已切换轻量光线显示':'已降低光效精细度以保持操作流畅';
+        resize();syncRegion();
+      }
+    }
+    queueFrame();
   }
   function playLabel(){if(state.topic==='vortex'&&evolution&&state.time>=evolutionDuration-1e-8){$('play').textContent='↺ 重播扰动';$('play').setAttribute('aria-pressed','true');return;}$('play').textContent=state.playing?(state.topic==='vortex'?'Ⅱ 暂停流动':'Ⅱ 暂停运行'):'▷ 继续播放';$('play').setAttribute('aria-pressed',String(!state.playing));}
   function updateGravity(){const {rh}=gravityScales();$('mass-value').textContent=state.mass.toFixed(1)+' 个地球';$('distance-value').textContent=state.distance.toFixed(2)+' 天文单位';$('moon-value').textContent=state.moon.toFixed(1)+' 万千米';$('hill-value').textContent=rh.toFixed(1);$('orbit-status').textContent=state.moon>rh?'轨道超出希尔球 · 很难维持束缚':state.moon>rh*.5?'轨道接近边界 · 稳定性需进一步判断':'轨道位于球内 · 不等于保证稳定';}
@@ -433,7 +453,7 @@
     $('boundary-label').textContent=evolution?'显示初始与当前轮廓':'显示球形边界';
     for(const id of ['density','layer-count','layer-more','layer-less','layer-focus','layer-visible'])$(id).disabled=!!evolution;
     $('region-enabled').checked=r.enabled;
-    $('density').min=isHero()?96:360;$('density').max=isHero()?768:2880;$('density').step=isHero()?96:360;
+    $('density').min=mini?'48':(isHero()?96:360);$('density').max=mini?String(mini.count):(isHero()?768:2880);$('density').step=mini?'48':(isHero()?96:360);
     $('trail').max=isHero()?4:2.8;
     for(const key of ['density','trail'])$(key).value=r[key];
     $('density-value').textContent=r.density+' 点';$('trail-value').textContent=r.trail.toFixed(2)+' 时间单位';
@@ -479,7 +499,7 @@
   $('gravity-boundary').onchange=e=>{state.boundary=e.target.checked;};$('rotate').onchange=e=>{state.rotate=e.target.checked;};
   $('speed').oninput=e=>{state.speed=+e.target.value;$('speed-value').textContent=state.speed.toFixed(2).replace(/0$/,'')+' ×';};
   $('trail').oninput=e=>{const r=currentRegion();r.trail=+e.target.value;const length=Math.ceil(r.trail/.01)+1;for(const p of r.cloud)if(p.history.length<length)Object.assign(p,P.makeTracer(p.p,state.swirl?state.spin:0,length));syncRegion();};
-  $('density').oninput=e=>{if(evolution)return;currentRegion().density=+e.target.value;ensureParticles(state.editing);syncRegion();};
+  $('density').oninput=e=>{if(evolution)return;currentRegion().density=mini?Math.min(mini.count,+e.target.value):+e.target.value;ensureParticles(state.editing);syncRegion();};
   $('spin').oninput=e=>{state.spin=+e.target.value;refreshTrails();$('spin-value').textContent=state.spin.toFixed(1);};
   $('glow').oninput=e=>{state.glow=+e.target.value;$('glow-value').textContent=state.glow?state.glow.toFixed(1):'关闭';};
   $('rasengan-light').oninput=e=>{state.rasenganLight=Math.max(0,Math.min(2,+e.target.value));$('rasengan-light-value').textContent=state.rasenganLight?state.rasenganLight.toFixed(1)+' ×':'关闭';};
@@ -506,6 +526,8 @@
   for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{pointers.delete(e.pointerId);pinch=0;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(-e.deltaY*.001));},{passive:false});canvas.ondblclick=()=>{state.zoom=1;setView(state.view);};
   document.addEventListener('keydown',e=>{if(/INPUT|BUTTON|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.target!==canvas)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(state.view==='3d'){rotateView(e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0,e.key==='ArrowUp'?20:e.key==='ArrowDown'?-20:0);cacheDirty=true;}}if(e.key==='+'||e.key==='=')zoom(1.12);if(e.key==='-')zoom(1/1.12);});
-  document.addEventListener('visibilitychange',()=>{last=0;});
-  new ResizeObserver(resize).observe(canvas);makeParticles('inside');makeParticles('outside');setAnimation('rasengan');resize();requestAnimationFrame(frame);
+  document.addEventListener('visibilitychange',()=>{last=0;if(document.hidden){if(typeof cancelAnimationFrame==='function')cancelAnimationFrame(frameHandle);frameHandle=0;}else if(!frameHandle||mini){queueFrame();}});
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(resize).observe(canvas);else {window.addEventListener('resize',resize);$('controls-toggle').addEventListener('click',()=>setTimeout(resize,0));}
+  if(mini){$('density').min='48';$('density').step='48';$('density').max=String(mini.count);}
+  makeParticles('inside');makeParticles('outside');setAnimation('rasengan');resize();queueFrame();
 })();

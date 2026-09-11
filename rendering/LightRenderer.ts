@@ -104,10 +104,14 @@ export class LightRenderer {
   private vao:WebGLVertexArrayObject;
   private target:WebGLFramebuffer;
   private texture:WebGLTexture;
-  private vertices=new Float32Array(12*6*65536);
+  private vertices:Float32Array;
+  private size:number;
+  private maxTriangles:number;
   private cursor=0;
 
-  constructor(canvas:HTMLCanvasElement){
+  constructor(canvas:HTMLCanvasElement,options:{size?:number;maxTriangles?:number}={}){
+    this.size=options.size??2160;this.maxTriangles=options.maxTriangles??Infinity;
+    this.vertices=new Float32Array(36*Math.min(131072,this.maxTriangles));
     const gl=canvas.getContext('webgl2',{alpha:true,premultipliedAlpha:true,antialias:false,preserveDrawingBuffer:true});
     if(!gl||!gl.getExtension('EXT_color_buffer_float'))throw new Error('当前浏览器不支持浮点光照画面');
     this.gl=gl;
@@ -127,7 +131,7 @@ export class LightRenderer {
     gl.bindVertexArray(this.vao);gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);
     for(let i=0;i<3;i++){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,4,gl.FLOAT,false,48,i*16);}
     this.texture=gl.createTexture()!;gl.bindTexture(gl.TEXTURE_2D,this.texture);
-    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,2160,2160,0,gl.RGBA,gl.HALF_FLOAT,null);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,this.size,this.size,0,gl.RGBA,gl.HALF_FLOAT,null);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
@@ -139,12 +143,13 @@ export class LightRenderer {
   }
   begin(){this.cursor=0;}
   triangle(a:LightVertex,b:LightVertex,c:LightVertex){
+    if(this.cursor/36>=this.maxTriangles)return;
     if(this.cursor+36>this.vertices.length){const next=new Float32Array(this.vertices.length*2);next.set(this.vertices);this.vertices=next;}
     this.vertices.set(a,this.cursor);this.vertices.set(b,this.cursor+12);this.vertices.set(c,this.cursor+24);this.cursor+=36;
   }
   finish(){
     const gl=this.gl;
-    gl.viewport(0,0,2160,2160);gl.bindFramebuffer(gl.FRAMEBUFFER,this.target);gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.viewport(0,0,this.size,this.size);gl.bindFramebuffer(gl.FRAMEBUFFER,this.target);gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(this.program);gl.bindVertexArray(this.vao);gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);
     gl.bufferData(gl.ARRAY_BUFFER,this.vertices.subarray(0,this.cursor),gl.DYNAMIC_DRAW);
     gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE);gl.drawArrays(gl.TRIANGLES,0,this.cursor/12);
