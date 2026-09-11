@@ -1,0 +1,13 @@
+{
+  "name": "rasengan-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "基于希尔球涡的螺旋丸与球状闪电交互实验",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}
