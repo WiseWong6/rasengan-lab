@@ -149,7 +149,7 @@
     $('scene-label').textContent=kind?(kind==='stretch'?'初始拉长 · 自由演变':'初始压扁 · 自由演变'):state.swirl?'受力旋流球涡':'经典希尔球涡';
     $('mode-description').textContent=kind?'开关只改变初始条件。内外流体共同决定之后的速度；未模拟挤压装置。选择经典球涡或受力旋流可结束扰动实验。':state.swirl?'外力维持球内螺旋翻卷；旋转在球面平滑消失，球外保持经典流动。':'经典场满足无黏、不可压缩的理想流体模型；沿轴心前行，从外侧返回。';
     $('speed-description').textContent=kind?'只改变播放进度；内外共用同一物理时钟。':'内外同步播放，保持球面两侧的速度衔接。';
-    syncRegion();updateNote();updateCards();playLabel();
+    syncRegion();updateNote();playLabel();
   }
   function advanceEvolution(dt){
     if(state.time>=evolutionDuration){state.playing=false;playLabel();return;}
@@ -400,15 +400,6 @@
     }else drawGravity();
     requestAnimationFrame(frame);
   }
-  const cardIcons=[
-    '<circle cx="30" cy="30" r="23" stroke="#537b72"/><path d="M28 48C4 36 14 8 27 14M32 48C56 36 46 8 33 14M30 44V15M26 20L30 14L34 20" stroke="#9ce4ce"/>',
-    '<circle cx="30" cy="30" r="23" stroke="#537b72" stroke-dasharray="2 4"/><ellipse cx="30" cy="30" rx="11" ry="22" stroke="#87c9bb"/><path d="M8 30Q30 13 52 30Q30 47 8 30" stroke="#87c9bb"/><circle cx="35" cy="15" r="3" fill="#ffc38b" stroke="none"/>',
-    '<path d="M30 5V55" stroke="#42635f" stroke-dasharray="2 3"/><path d="M14 46C52 43 9 33 45 26C57 20 8 15 33 7M14 46L19 40M14 46L22 49" stroke="#9ce4ce"/>'
-  ];
-  function updateCards(){const texts=state.topic==='vortex'&&evolution?[[
-    '只改变起始条件',evolution.stretch>1?'轴向拉长 25%，横向收窄；体积不变，之后不再继续挤压。':'轴向压扁 25%，横向展开；体积不变，之后不再继续挤压。'],[
-    evolution.stretch>1?'看后方怎样拖尾':'看环境流体怎样卷入',evolution.stretch>1?'对照杏色的起始轮廓，观察原涡团哪些部分留在后方。':'打开「环境流体」，切换「剖面」，观察后方流体进入原涡团的过程。'],[
-    '相似形状可能有不同原因','此处仅改变涡团的初始形状，不计算受热、浮力或三维紊流。']]:state.topic==='vortex'?[['从里面翻出来','沿轴心前行，从外侧返回。想看清循环，试试右上角的「剖面」。'],['没有固定的层数','流体在整个球内连续分布。蓝色短线只是抽样粒子的轨迹，不是分层结构。'],['翻卷 ≠ 绕轴旋转','切换「受力旋流」，看平面内的循环如何变成绕轴的螺旋轨迹。']]:[['质量越大，范围越大','其他条件相同，质量增为 8 倍，希尔半径约增为 2 倍。'],['离太阳越远，范围越大','其他条件相同，公转距离增加一倍，希尔半径也增加一倍。'],['球内，也不一定稳定','希尔球是近似范围。靠近边界的卫星，更容易受太阳扰动。']];$('cards').innerHTML=texts.map((a,i)=>`<article class="card"><svg viewBox="0 0 60 60" fill="none" stroke-width="1.1" aria-hidden="true">${cardIcons[i]}</svg><div><h3><span class="card-num">0${i+1}</span>${a[0]}</h3><p>${a[1]}</p></div></article>`).join('');}
   function playLabel(){if(state.topic==='vortex'&&evolution&&state.time>=evolutionDuration-1e-8){$('play').textContent='↺ 重播扰动';$('play').setAttribute('aria-pressed','true');return;}$('play').textContent=state.playing?(state.topic==='vortex'?'Ⅱ 暂停流动':'Ⅱ 暂停运行'):'▷ 继续播放';$('play').setAttribute('aria-pressed',String(!state.playing));}
   function updateGravity(){const {rh}=gravityScales();$('mass-value').textContent=state.mass.toFixed(1)+' 个地球';$('distance-value').textContent=state.distance.toFixed(2)+' 天文单位';$('moon-value').textContent=state.moon.toFixed(1)+' 万千米';$('hill-value').textContent=rh.toFixed(1);$('orbit-status').textContent=state.moon>rh?'轨道超出希尔球 · 很难维持束缚':state.moon>rh*.5?'轨道接近边界 · 稳定性需进一步判断':'轨道位于球内 · 不等于保证稳定';}
   function syncAxis(){
@@ -465,11 +456,10 @@
     state.topic=topic;const vortex=topic==='vortex';$('animation-gallery').hidden=!vortex;
     $('simulation-time').hidden=!vortex;
     $('vortex-controls').style.display=vortex?'block':'none';$('gravity-controls').style.display=vortex?'none':'block';$('gravity-boundary-row').style.display=vortex?'none':'flex';
-    $('eyebrow').textContent=vortex?'流体力学 / 球形涡流':'天体力学 / 引力范围';$('title').textContent=vortex?'球的形状，流动的内心。':'引力，也有自己的范围。';$('subtitle').textContent=vortex?'从内部翻卷，到绕轴缠绕。选择一种动画，观察同一个球涡。':'改变质量与距离，观察行星周围的希尔球如何变化。';
-    $('exp-number').textContent='五种观看方式';$('scene-label').textContent=vortex?(evolution?(evolution.stretch>1?'初始拉长 · 自由演变':'初始压扁 · 自由演变'):state.swirl?'受力旋流球涡':'经典希尔球涡'):'行星的希尔球';$('frame-label').textContent=vortex?'随球移动的视角 · 球心保持静止':'以行星为中心 · 太阳质量固定';$('view-section').textContent=vortex?'剖面':'侧视';$('view-top').textContent=vortex?'沿 y 轴':'俯视';
+    $('scene-label').textContent=vortex?(evolution?(evolution.stretch>1?'初始拉长 · 自由演变':'初始压扁 · 自由演变'):state.swirl?'受力旋流球涡':'经典希尔球涡'):'行星的希尔球';$('frame-label').textContent=vortex?'随球移动的视角 · 球心保持静止':'以行星为中心 · 太阳质量固定';$('view-section').textContent=vortex?'剖面':'侧视';$('view-top').textContent=vortex?'沿 y 轴':'俯视';
     $('legend-title').textContent='青色 / 希尔球 · 杏色 / 卫星轨道';$('legend-gradient').hidden=!vortex;document.querySelector('.legend-labels').hidden=!vortex;
-    $('footer-note').textContent=vortex?'希尔球涡 · 绕轴旋转由外力维持 · 发光为艺术表现':'圆轨道近似 · 太阳方位为示意 · 球边界与卫星轨道按同一比例显示';canvas.setAttribute('aria-label',vortex?'希尔球涡三维演示。拖动或方向键旋转，滚轮或加减键缩放。':'希尔球三维演示。拖动或方向键旋转，滚轮或加减键缩放。');
-    setView('3d');syncAnimation();updateCards();updateGravity();syncRegion();playLabel();
+    canvas.setAttribute('aria-label',vortex?'希尔球涡三维演示。拖动或方向键旋转，滚轮或加减键缩放。':'希尔球三维演示。拖动或方向键旋转，滚轮或加减键缩放。');
+    setView('3d');syncAnimation();updateGravity();syncRegion();playLabel();
   }
   function setSwirl(on){state.animation=null;syncAnimation();if(evolution)setPerturbation(null);const changed=state.swirl!==on;state.swirl=on;if(changed)refreshTrails();$('classic').setAttribute('aria-pressed',String(!on));$('swirl').setAttribute('aria-pressed',String(on));$('spin-control').hidden=!on;$('scene-label').textContent=on?'受力旋流球涡':'经典希尔球涡';$('mode-description').textContent=on?'外力维持球内螺旋翻卷；旋转在球面平滑消失，球外保持经典流动。切换强度重新计算稳态路径，不模拟启动过程。':'经典场满足无黏、不可压缩的理想流体模型；沿轴心前行，从外侧返回。';cacheDirty=true;updateNote();}
   for(const kind of Object.keys(A.presets))$('animation-'+kind).onclick=()=>setAnimation(kind);
@@ -508,7 +498,6 @@
     $('rasengan-light').value=0;$('rasengan-light-value').textContent='关闭';
     setSwirl(false);makeParticles('inside');makeParticles('outside');setTopic(state.topic);
   };
-  $('about').onclick=()=>{$('details').showModal();};
   $('controls-toggle').onclick=()=>{const expanded=$('controls-toggle').getAttribute('aria-expanded')!=='true';$('controls-toggle').setAttribute('aria-expanded',String(expanded));$('controls-toggle').textContent=expanded?'收起参数':'调整参数';$('control-panel').setAttribute('data-expanded',String(expanded));};
   function rotateView(dx,dy){const c=Math.cos(state.roll),s=Math.sin(state.roll);state.yaw+=(dx*c+dy*s)*.006;state.pitch=Math.max(-1.5,Math.min(1.5,state.pitch+(-dx*s+dy*c)*.006));cacheDirty=true;}
   const pointers=new Map();let pinch=0;
@@ -516,7 +505,7 @@
   canvas.addEventListener('pointermove',e=>{const old=pointers.get(e.pointerId);if(!old)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const p=[...pointers.values()],d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(pinch>0)zoom(d/pinch);pinch=d;return;}if(state.view!=='3d')return;rotateView(e.clientX-old.x,e.clientY-old.y);state.rotate=false;$('rotate').checked=false;cacheDirty=true;});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{pointers.delete(e.pointerId);pinch=0;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(Math.exp(-e.deltaY*.001));},{passive:false});canvas.ondblclick=()=>{state.zoom=1;setView(state.view);};
-  document.addEventListener('keydown',e=>{if($('details').open||/INPUT|BUTTON|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.target!==canvas)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(state.view==='3d'){rotateView(e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0,e.key==='ArrowUp'?20:e.key==='ArrowDown'?-20:0);cacheDirty=true;}}if(e.key==='+'||e.key==='=')zoom(1.12);if(e.key==='-')zoom(1/1.12);});
+  document.addEventListener('keydown',e=>{if(/INPUT|BUTTON|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.target!==canvas)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(state.view==='3d'){rotateView(e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0,e.key==='ArrowUp'?20:e.key==='ArrowDown'?-20:0);cacheDirty=true;}}if(e.key==='+'||e.key==='=')zoom(1.12);if(e.key==='-')zoom(1/1.12);});
   document.addEventListener('visibilitychange',()=>{last=0;});
   new ResizeObserver(resize).observe(canvas);makeParticles('inside');makeParticles('outside');setAnimation('rasengan');resize();requestAnimationFrame(frame);
 })();
