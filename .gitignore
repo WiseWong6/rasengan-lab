@@ -29,3 +29,9 @@ claude.md
 id_rsa
 id_ed25519
 credentials.json
+
+# 本地平台打包材料，不公开
+.local-minitool/
+minitool/
+scripts/build-minitool.mjs
+scripts/package-minitool.py

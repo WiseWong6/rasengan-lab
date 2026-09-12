@@ -49,20 +49,6 @@ https://github.com/wisewong6/rasengan-lab
 
 本仓库只包含交互页面及其构建、测试代码，不包含视频工程、配音或视频文件。
 
-## 小红书小工具
-
-```sh
-npm ci
-npm run build:minitool
-python3 scripts/package-minitool.py
-```
-
-产物为 `delivery/rasengan-lab-minitool.zip`，入口 `index.html` 位于压缩包根目录。全部资源离线加载，脚本外置并按 ES2017 / Chrome 61 目标构建。小工具的兼容样式和运行预算位于 `minitool/`，不会覆盖独立 HTML 的默认光效设置。
-
-小工具默认最多 192 个示踪粒子、30 次刷新/秒；持续卡顿后逐级减少精细度、退回轻量绘图，再暂停运动。页面隐藏时取消刷新。WebGL 纹理默认 1024 方形，降级为 768 方形，限制绘制数量和画布分辨率。
-
-包体和能力检查为静态检查；Chrome 61 浏览器、平台容器和手机性能尚未实测，不能据此宣称帧率达标。上传平台后需体验五个动画、拖动缩放、暂停重播、参数展开及切后台恢复。
-
 ## 文件夹结构
 
 ```text
@@ -71,11 +57,8 @@ index.html                开发入口，可直接离线打开
 src/                      交互与物理源码
   rendering/              光照、流线、电流及数据
 assets/                   开发入口使用的已构建绘图脚本
-scripts/                  构建与打包脚本
+scripts/                  构建脚本
 tests/                    自动检查
-minitool/                 小工具兼容层
-dist/                     小工具构建目录（不提交）
-delivery/                 小工具压缩包及交付附件（不提交）
 ```
 
-修改源码后运行 `npm run build`，同步更新离线单文件和绘图脚本。发布小工具时再运行 `npm run build:minitool` 与 `python3 scripts/package-minitool.py`。
+修改源码后运行 `npm run build`，同步更新离线单文件和绘图脚本。

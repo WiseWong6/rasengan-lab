@@ -5,8 +5,7 @@
   "description": "基于希尔球涡的螺旋丸与球状闪电交互实验",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node --test tests/*.test.cjs",
-    "build:minitool": "node scripts/build-minitool.mjs"
+    "test": "node --test tests/*.test.cjs"
   },
   "devDependencies": {
     "esbuild": "0.28.1"
