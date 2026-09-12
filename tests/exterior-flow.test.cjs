@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const P=require('../physics.js'),D=P.exteriorDomain;
+const P=require('../src/physics.js'),D=P.exteriorDomain;
 
 function rawStreamfunction(h2,y){return h2*(1-(h2+y*y)**-1.5);}
 function radiusAt(y){

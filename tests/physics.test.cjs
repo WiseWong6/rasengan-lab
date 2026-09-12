@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const P=require('../physics.js');
+const P=require('../src/physics.js');
 test('经典场满足稳态动量平衡，球面两侧压力连续',()=>{
   for(const p of [[0,0,0],[.2,.3,.4],[.7,-.3,.2],[1.2,.5,.2],[-.2,-1.4,.7]]){
     const u=P.velocity(p),e=1e-5,acc=[0,0,0],grad=[];

@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const P=require('../physics.js');
+const P=require('../src/physics.js');
 
 const spins=[0,2,6,8];
 const points=[[0,0,0],[0,.53,0],[.2,.3,.4],[.61,-.42,.2],[-.18,.73,.29],[.78,.1,-.13],[1.2,.5,.2],[-.4,-1.4,.7]];

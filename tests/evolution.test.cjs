@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const Evolution=require('../evolution.js');
-const P=require('../physics.js');
+const Evolution=require('../src/evolution.js');
+const P=require('../src/physics.js');
 
 test('未变形初始场接近希尔解析场，轴心与球内外速度有限',()=>{
   const flow=new Evolution(1),points=P.seedVolume(160).concat(P.seedExterior(160));

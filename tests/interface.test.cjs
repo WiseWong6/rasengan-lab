@@ -5,17 +5,17 @@ const vm=require('node:vm');
 const path=require('node:path');
 const dir=path.resolve(__dirname,'..');
 function createHarness(preset=false,bundled=false,reduced=false,mini=false){
-  const html=fs.readFileSync(path.join(dir,bundled?'希尔实验室.html':'index.html'),'utf8');
+  const html=fs.readFileSync(path.join(dir,bundled?'螺旋丸实验室.html':'index.html'),'utf8');
   let calls=0,raf,now=0,tracerCreations=0,captureAdvance=false,processingCost=0,processingClock=0;
   const advances=[],documentEvents={},dyePaint=[];
   const draw=new Proxy({}, {get(target,key){if(key==='createImageData')return(w,h)=>({data:new Uint8ClampedArray(w*h*4)});if(key==='createRadialGradient')return()=>({addColorStop(){}});return target[key]||((...args)=>{calls++;if(key==='fill'){const opacity=/^rgba\(33,139,255,([\d.eE+-]+)\)$/.exec(target.fillStyle||'');if(opacity)dyePaint.push(Number(opacity[1]));}for(const arg of args)if(typeof arg==='number')assert.ok(Number.isFinite(arg),`${key} 收到非有限数值`);});},set(t,k,v){t[k]=v;return true;}});
   class Element{constructor(){this.style={};this.attrs={};this.events={};this.tagName='DIV';}setAttribute(k,v){this.attrs[k]=v;}getAttribute(k){return this.attrs[k];}addEventListener(k,v){this.events[k]=v;}getContext(){return draw;}getBoundingClientRect(){return{width:900,height:598};}setPointerCapture(){}showModal(){this.open=true;}}
   const nodes={};for(const id of [...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1])){assert.ok(!nodes[id],`重复标识 ${id}`);nodes[id]=new Element();}
   const document={getElementById(id){assert.ok(nodes[id],`页面缺少 ${id}`);return nodes[id];},createElement(){return new Element();},querySelector(){return new Element();},addEventListener(name,fn){documentEvents[name]=fn;}};
-  const physics=require('../physics.js');
-  const scope={HillAnimations:require('../animations.js'),VortexEvolution:require('../evolution.js'),HillPhysics:{...physics,makeTracer(...args){tracerCreations++;return physics.makeTracer(...args);},advanceTracer(tracer,dt,spin){if(captureAdvance)advances.push({tracer,dt,spin});return physics.advanceTracer(tracer,dt,spin);}},document,matchMedia:()=>({matches:reduced}),devicePixelRatio:1,ResizeObserver:class{constructor(fn){this.fn=fn;}observe(){this.fn();}},requestAnimationFrame(fn){raf=fn;return 1;},cancelAnimationFrame(){raf=null;},performance:{now(){processingClock+=processingCost;return processingClock;}}};
+  const physics=require('../src/physics.js');
+  const scope={HillAnimations:require('../src/animations.js'),VortexEvolution:require('../src/evolution.js'),HillPhysics:{...physics,makeTracer(...args){tracerCreations++;return physics.makeTracer(...args);},advanceTracer(tracer,dt,spin){if(captureAdvance)advances.push({tracer,dt,spin});return physics.advanceTracer(tracer,dt,spin);}},document,matchMedia:()=>({matches:reduced}),devicePixelRatio:1,ResizeObserver:class{constructor(fn){this.fn=fn;}observe(){this.fn();}},requestAnimationFrame(fn){raf=fn;return 1;},cancelAnimationFrame(){raf=null;},performance:{now(){processingClock+=processingCost;return processingClock;}}};
   if(mini){scope.MiniToolRuntime={level:0,count:192,buffer:960,renderOptions:()=>({size:1024,maxTriangles:99999,samples:40})};delete scope.ResizeObserver;scope.window={addEventListener(){}};}
-  const program=bundled?[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n'):fs.readFileSync(path.join(dir,'app.js'),'utf8');
+  const program=bundled?[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n'):fs.readFileSync(path.join(dir,'src/app.js'),'utf8');
   const instrumented=program.replace(/\}\)\(\);\s*$/, 'globalThis.inspect=()=>({state,regions,accumulator,evolution,evolutionOutline});globalThis.testApi={clipSectionSegment,collectRenderItems,pathSegments,project,advanceFlow,spriteSphereCut,setAnimation,renderFlow,appearance,particleColor};})();');
   vm.runInNewContext(instrumented,scope);
   if(!preset)nodes.classic.onclick();

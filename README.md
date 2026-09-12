@@ -23,12 +23,12 @@ npm run build
 npm test
 ```
 
-构建先生成 `hero-renderer.js`，再将脚本内嵌到 `螺旋丸实验室.html`。运行页面不需要安装依赖。
+构建先生成 `assets/hero-renderer.js`，再将脚本内嵌到 `螺旋丸实验室.html`。运行页面不需要安装依赖。
 
-- `physics.js`、`evolution.js`：独立复制的原始物理计算，公式未改
-- `animations.js`：观看方式与确定的粒子起点
-- `app.js`、`index.html`：交互、布局及轻量绘图
-- `rendering/`：从视频开头复用的光照、流线与局部电流材质，改为适合交互画布的正方形显示
+- `src/physics.js`、`src/evolution.js`：独立复制的原始物理计算，公式未改
+- `src/animations.js`：观看方式与确定的粒子起点
+- `src/app.js`、`index.html`：交互、布局及轻量绘图
+- `src/rendering/`：从视频开头复用的光照、流线与局部电流材质，改为适合交互画布的正方形显示
 - `tests/`：物理守恒、流线、切换、重播、触控和离线产物检查
 
 ## 模型范围
@@ -37,11 +37,11 @@ npm test
 
 球状闪电中的折线、分叉与发光是材质效果，没有求解放电或等离子体方程，不代表已确认球状闪电的成因。
 
-原始实现来自 `physics/hill-vortex`，光照参考来自 `physics/hill-bubble-video`；必需源文件与数据均已复制进本仓库。原项目与已导出视频未修改。
+物理计算、光照实现与所需数据全部随源码提供，运行及构建均不依赖其他项目。
 
-## 本次验证
+## 验证
 
-构建通过，34 项自动检查通过。已检查五个入口、重播的确定性、暂停、参数面板状态、拖动关闭自动旋转、减少动态效果，以及离线页面无外部脚本请求。手机真实设备上的帧率、实际触感与视觉效果仍需实机体验；未执行截图验收。
+`npm test` 检查物理守恒、五个入口、重播、暂停、参数面板、拖动停止自动旋转、减少动态效果和离线脚本完整性。手机性能与平台容器中的体验仍需实机验证。
 
 ## 公开仓库
 
@@ -61,10 +61,21 @@ python3 scripts/package-minitool.py
 
 小工具默认最多 192 个示踪粒子、30 次刷新/秒；持续卡顿后逐级减少精细度、退回轻量绘图，再暂停运动。页面隐藏时取消刷新。WebGL 纹理默认 1024 方形，降级为 768 方形，限制绘制数量和画布分辨率。
 
-指定的打包技能安装于本地 `.codex/minitool-zip-builder/`，未上传。安装后可审计：
+包体和能力检查为静态检查；Chrome 61 浏览器、平台容器和手机性能尚未实测，不能据此宣称帧率达标。上传平台后需体验五个动画、拖动缩放、暂停重播、参数展开及切后台恢复。
 
-```sh
-python3 .codex/minitool-zip-builder/scripts/audit_artifact.py delivery/rasengan-lab-minitool.zip
+## 文件夹结构
+
+```text
+index.html                开发入口，可直接离线打开
+螺旋丸实验室.html           构建后的单文件交付入口
+src/                      交互与物理源码
+  rendering/              光照、流线、电流及数据
+assets/                   开发入口使用的已构建绘图脚本
+scripts/                  构建与打包脚本
+tests/                    自动检查
+minitool/                 小工具兼容层
+dist/                     小工具构建目录（不提交）
+delivery/                 小工具压缩包及交付附件（不提交）
 ```
 
-包体和能力检查为静态检查；Chrome 61 浏览器、平台容器和手机性能尚未实测，不能据此宣称帧率达标。上传平台后需体验五个动画、拖动缩放、暂停重播、参数展开及切后台恢复。
+修改源码后运行 `npm run build`，同步更新离线单文件和绘图脚本。发布小工具时再运行 `npm run build:minitool` 与 `python3 scripts/package-minitool.py`。
