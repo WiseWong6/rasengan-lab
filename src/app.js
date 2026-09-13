@@ -254,7 +254,6 @@
       const q=project([.96,.1,0]);bg.fillText(state.axis==='horizontal'?'← 外侧返回':'↓ 外侧返回',q.x+22,q.y);
     }
   }
-  // 参考 Developer/Rasengan 的 ribbonFragmentShader：深蓝、亮蓝、青色，细线芯与低强度外晕。
   // 仅重绘已有轨迹的亮部，不创建新的旋臂、光球或粒子运动。
   function flowLight(p){
     const inward=1-Math.min(1,Math.hypot(...p)),deep=[7,92,255],blue=[20,156,255],cyan=[116,229,255];
